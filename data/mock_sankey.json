@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "node": "1.1",
+      "text": "foo",
+      "vin_or_subvin_list": ["VIN001", "VIN002"]
+    },
+    {
+      "node": "1.2",
+      "text": "bar",
+      "vin_or_subvin_list": ["VIN003", "VIN004", "VIN005"]
+    },
+    {
+      "node": "1.2.1",
+      "text": "barfoo",
+      "vin_or_subvin_list": ["VIN003"]
+    },
+    {
+      "node": "1.2.2",
+      "text": "barbar",
+      "vin_or_subvin_list": ["VIN004", "VIN005"]
+    },
+    {
+      "node": "1.2.2.1",
+      "text": "barbarfoo",
+      "vin_or_subvin_list": ["VIN004"]
+    },
+    {
+      "node": "1.2.2.2",
+      "text": "barbarbar",
+      "vin_or_subvin_list": ["VIN005"]
+    }
+  ]
+}

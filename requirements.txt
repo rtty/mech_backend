@@ -1,0 +1,15 @@
+cryptography
+Django
+django-cors-headers
+djangorestframework
+mysqlclient
+numpy
+pandas
+ply
+PyJWT
+python-dateutil
+pytz
+requests
+six
+sqlparse
+xlrd

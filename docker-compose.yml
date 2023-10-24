@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  db:
+    image: 'mysql:latest'
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mechanics
+    command: 'mysqld --default-authentication-plugin=mysql_native_password'
+    security_opt:
+      - seccomp:unconfined
+
+  mechanics_backend:
+    image: 'mechanics-backend'
+    ports:
+      - '8080:8000' # serve http
+      - '8443:443' # serve https
+    environment:
+      DB_NAME: mechanics
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: db
+      DB_PORT: 3306
+      AZURE_CLIENT_ID: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+      AZURE_TENANT_ID: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY'
+    restart: 'always'
+    volumes:
+      -  ./:/app
+    links:
+      - db

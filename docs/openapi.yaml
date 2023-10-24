@@ -1,0 +1,2904 @@
+# REST API
+
+openapi: 3.0.2
+info:
+  title: REST API
+  version: 1.0.1
+servers:
+  - url: /api/v1
+tags:
+  - name: Login
+  - name: Users
+  - name: Workspaces
+  - name: Rules
+  - name: RuleVersions
+  - name: RuleFunctions
+  - name: NodeFunctions
+  - name: Projects
+  - name: Mappings
+  - name: Misc
+
+paths:
+
+  # User Management Endpoints
+  # ============================================================
+  
+  /users:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerJWT: []
+      description: Get all users (access restricted to Super Users only)
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/userSortBy'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: User results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerJWT: []
+      description: |
+        Get a user by ID. Access is open to both Standard Users and 
+        Super Users (needed, for example, to see names/thumbnails 
+        of other members of your workspace).
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Users
+      security:
+        - BearerJWT: []
+      description: Delete a user (access restricted to Super Users only)
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to delete
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: User was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /users/{userId}/role:
+    put:
+      tags:
+        - Users
+      security:
+        - BearerJWT: []
+      description: Update a user's role (access restricted to Super Users only)
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: New role to set
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newRole:
+                  type: string
+                  enum: 
+                    - 'Standard User'
+                    - 'Super User'
+              required:
+                - newRole
+      responses:
+        '204':
+          description: User's role was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  # Workspace Endpoints
+  # ============================================================
+  
+  /workspaces:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: |
+        Get all workspaces that the current user (owner of JWT) 
+        belongs to (sorted in alphabetical order by name)
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Workspace results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workspace'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: |
+        Create new workspace. The current user (owner of JWT) 
+        will be added as owner and first member of the workspace.
+      requestBody:
+        description: New workspace info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: The newly-created workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: A workspace with that name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /workspaces/{workspaceId}:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: Get a workspace by ID (restricted to members only)
+      parameters:
+        - name: workspaceId
+          in: path
+          description: ID of workspace to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          description: |
+            Missing or invalid JSON Web Token. 
+            Access restricted to workspace members only.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: |
+        Delete a workspace by ID (restricted to owner or Super User only)
+      parameters:
+        - name: workspaceId
+          in: path
+          description: ID of workspace to delete
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Workspace was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          description: |
+            Missing or invalid JSON Web Token. 
+            Access restricted to workspace owner or Super User only.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: Update a workspace by ID (restricted to owner only)
+      parameters:
+        - name: workspaceId
+          in: path
+          description: ID of workspace to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: |
+          New workspace object with updated field values. 
+          Just include the fields that need to be updated - 
+          all other fields will remain the same.
+          Changes to "id" and "ownerUserId" fields will be ignored.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workspace'
+      responses:
+        '204':
+          description: Workspace was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          description: |
+            Missing or invalid JSON Web Token. 
+            Access restricted to workspace owner only.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: |
+            The "name" field was updated, but a workspace with
+            the new name already exists, so updating failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /workspaces/{workspaceId}/copy:
+    post:
+      tags:
+        - Workspaces
+      security:
+        - BearerJWT: []
+      description: |
+        Copy a workspace by ID (restricted to members only).
+        The current user (owner of JWT) will be set as the new owner.
+      parameters:
+        - name: workspaceId
+          in: path
+          description: ID of workspace to copy
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: New workspace name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: The newly-created workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          description: |
+            Missing or invalid JSON Web Token. 
+            Access restricted to workspace members only.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: A workspace with that name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  # Rule Endpoints
+  # ============================================================
+  
+  /rules:
+    get:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: Get all rules (sorted in alphabetical order by name)
+      parameters:
+        - $ref: '#/components/parameters/nameFilter'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Rule results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: Create new rule
+      requestBody:
+        description: New rule info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: The newly-created rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: A rule with that name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/{ruleId}:
+    get:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: Get a rule by ID
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of rule to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: Delete a rule by ID
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of rule to delete
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Rule was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: Update a rule by ID
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of rule to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: |
+          New rule object with updated field values. 
+          Just include the fields that need to be updated - 
+          all other fields will remain the same. 
+          Changes to "id" and "ruleVersions" fields will be ignored. 
+          To update rule versions, use /rule-versions endpoints instead.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+      responses:
+        '204':
+          description: Rule was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: |
+            The "name" field was updated, but a rule with
+            the new name already exists, so updating failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/{ruleId}/copy:
+    post:
+      tags:
+        - Rules
+      security:
+        - BearerJWT: []
+      description: |
+        Copy a rule by ID. This is a deep copy, 
+        so all rule versions are copied as well 
+        and given new IDs and updated fields.
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of rule to copy
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: New rule name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: The newly-created rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: A rule with that name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  # Rule Version Endpoints
+  # ============================================================
+  
+  /rules/{ruleId}/rule-versions:
+    get:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Get all rule versions under the specified rule
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of parent rule
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Rule version results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RuleVersion'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Create new rule version under the specified rule
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of parent rule
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: New rule version info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                versionNumber:
+                  type: string
+                  format: 'x.y'
+                notes:
+                  type: string
+              required:
+                - versionNumber
+      responses:
+        '201':
+          description: |
+            The newly-created rule version with its fields 
+            initialized to appropriate default values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleVersion'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: |
+            A rule version with that version number ('x.y') 
+            already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rule-versions/{ruleVersionId}:
+    get:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Get a rule version by ID
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      responses:
+        '200':
+          description: The requested rule version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleVersion'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Delete a rule version by ID (restricted to Super Users only)
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      responses:
+        '204':
+          description: Rule version was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '403':
+          description: |
+            Rule version cannot be deleted because
+            its "state" is already "Published"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Patch a rule version. Works only if in "Draft" state.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      requestBody:
+        description: Data to be modified (only modified properties should be sent)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleVersion'
+      responses:
+        '204':
+          description: Rule version was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '403':
+          description: |
+            Rule version cannot be edited because
+            its "state" it isn't "Draft"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rule-versions/{ruleVersionId}/reject:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Update a rule version's state to Draft (restricted to Super Users only). 
+        If successful, this operation will also set the rule version's 
+        "dateModified" field to the current date.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      responses:
+        '204':
+          description: Rule version's state was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '403':
+          description: |
+            Invalid/forbidden state transition.
+            Rule version's state can only transition from 
+            "Draft" --> "In Review" --> "Published" or 
+            "In Review" --> "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule-versions/{ruleVersionId}/approve:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Update a rule version's state to Published (restricted to Super Users only). 
+        If successful, this operation will also set the rule version's 
+        "dateModified" field to the current date.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      responses:
+        '204':
+          description: Rule version's state was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '403':
+          description: |
+            Invalid/forbidden state transition.
+            Rule version's state can only transition from 
+            "Draft" --> "In Review" --> "Published" or 
+            "In Review" --> "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule-versions/{ruleVersionId}/publish:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Update a rule version's state to In Review. 
+        If successful, this operation will also set the rule version's 
+        "dateModified" field to the current date.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      responses:
+        '204':
+          description: Rule version's state was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '403':
+          description: |
+            Invalid/forbidden state transition.
+            Rule version's state can only transition from 
+            "Draft" --> "In Review" --> "Published" or 
+            "In Review" --> "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule-versions/{ruleVersionId}/lock:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Update a rule version's lock status. 
+        If successful, this operation will also set the rule version's 
+        "dateModified" field to the current date.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      requestBody:
+        description: Whether to lock or unlock
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newIsLocked:
+                  type: boolean
+              required:
+                - newIsLocked
+      responses:
+        '204':
+          description: Rule version's lock status was updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: |
+            Update forbidden. Standard User can only unlock 
+            a rule version that they have locked themselves.
+            Also, changes can only be made when "state" is "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule-versions/{ruleVersionId}/convert:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: Convert plain English rule text to a new node tree. Rule Version has to be locked.
+      parameters:
+        - $ref: '#/components/parameters/ruleVersionIdParameter'
+      requestBody:
+        description: Plain English text to convert
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newText:
+                  type: string
+              required:
+                - newText
+      responses:
+        '200':
+          description: Rule version was updated successfully with the new node tree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleVersion'
+        '400':
+          description: |
+            Missing or malformed request body, 
+            or the grammar is incorrect, 
+            or the rule text parses but is not complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: |
+            Rule version state is not 'Draft', Rule version isn't locked
+            or was locked by a different user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  # /rule-versions/{ruleVersionId}/text:
+  #   put:
+  #     tags:
+  #       - RuleVersions
+  #     security:
+  #       - BearerJWT: []
+  #     description: |
+  #       Update a rule version's text. 
+  #       If successful, this operation will also set the rule version's 
+  #       "dateModified" field to the current date.
+  #     parameters:
+  #       - name: ruleVersionId
+  #         in: path
+  #         description: ID of rule version to update
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int32
+  #     requestBody:
+  #       description: New text to set
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               newText:
+  #                 type: string
+  #             required:
+  #               - newText
+  #     responses:
+  #       '204':
+  #         description: Rule version's text was updated successfully
+  #       '400':
+  #         $ref: '#/components/responses/BadRequestError'
+  #       '401':
+  #         $ref: '#/components/responses/UnauthorizedError'
+  #       '403':
+  #         description: |
+  #           Update forbidden. Edits can only be made
+  #           when rule version's "state" is "Draft".
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ErrorModel'
+  #       '404':
+  #         description: Rule version not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ErrorModel'
+  #       '500':
+  #         $ref: '#/components/responses/InternalServerError'
+  
+  /rule-versions/{ruleVersionId}/notes:
+    post:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Add new notes to a rule version. The new notes will be
+        added to the "notes" array, along with the current user
+        (as the "author") and current date (as the "dateCreated").
+        If successful, this operation will also set the rule version's 
+        "dateModified" field to the current date.
+      parameters:
+        - name: ruleVersionId
+          in: path
+          description: ID of rule version to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: New notes to add
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newNotes:
+                  type: string
+              required:
+                - newNotes
+      responses:
+        '204':
+          description: Rule version's notes were added successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: |
+            Update forbidden. Edits can only be made
+            when rule version's "state" is "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /rule-versions/{ruleVersionId}/tests:
+    put:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Associate the Rule Version with existing Tests.
+      parameters:
+        - name: ruleVersionId
+          in: path
+          description: ID of rule version to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: Tests to add
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tests:
+                  type: array
+                  items:
+                    type: number
+                  example: [2, 3, 4]
+              required:
+                - tests
+      responses:
+        '200':
+          description: |
+            Rule version's tests were added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleVersion'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: |
+            Update forbidden. Edits can only be made
+            when rule version's "state" is "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: Rule Version already associated with that Test
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /rule-versions/{ruleVersionId}/tests/{testId}:
+    delete:
+      tags:
+        - RuleVersions
+      security:
+        - BearerJWT: []
+      description: |
+        Delete the association of the Rule Version with the Test.
+      parameters:
+        - name: ruleVersionId
+          in: path
+          description: ID of rule version to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: testId
+          in: path
+          description: ID of test to remove from the rule version
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Association removed successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: |
+            Update forbidden. Edits can only be made
+            when rule version's "state" is "Draft".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Rule version or Test not found, or not associated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      
+  
+  # Rule Function Endpoints
+  # (Note: GET requests cannot have body, so almost all below are POST)
+  # ============================================================
+  
+  /rules/functions/next-tokens:
+    post:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Returns a list containing the next set of allowed tokens 
+        after the last token in the provided rule text. The text 
+        must conform to the rules and grammar required. Use get_next_tokens parser method.
+      requestBody:
+        description: The provided completed or semi-completed rule text
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ruleText:
+                  type: string
+              required:
+                - ruleText
+      responses:
+        '200':
+          description: |
+            A list containing the list of the next allowed tokens 
+            after the last word in the rule text. If the rule text 
+            is complete, returns an empty list. 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nextTokens:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - nextTokens
+        '400':
+          description: |
+            Missing or malformed request body, 
+            or the rule text passed in has incorrect grammar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/functions/translation:
+    post:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Translates the provided rule text (plain English) 
+        to the desired script language (technical text). Use get_translation parser method.
+      requestBody:
+        description: The rule text to be translated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ruleText:
+                  type: string
+                ruleTests:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+                      testCategoryName:
+                        type: string
+                      testGroupName:
+                        type: string
+                    required:
+                      - testName
+                      - testType
+                      - testCategoryName
+              required:
+                - ruleText
+      responses:
+        '200':
+          description: The translated rule text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translation:
+                    type: string
+                required:
+                  - translation
+        '400':
+          description: |
+            Missing or malformed request body, 
+            or the grammar is incorrect, 
+            or the rule text parses but is not complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/functions/parses:
+    post:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Parses the passed in rule text and returns whether or not 
+        it parses. The rule text may or may not be complete. Use parses parser method.
+      requestBody:
+        description: The rule text to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ruleText:
+                  type: string
+              required:
+                - ruleText
+      responses:
+        '200':
+          description: |
+            Whether or not the rule text parses. True if the rule parses 
+            correctly (even if incomplete). False otherwise.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parses:
+                    type: boolean
+                required:
+                  - parses
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/functions/is-complete:
+    post:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Returns whether or not the passed in rule text is complete. Use is_complete parser method.
+      requestBody:
+        description: The rule text to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ruleText:
+                  type: string
+              required:
+                - ruleText
+      responses:
+        '200':
+          description: |
+            Whether or not the rule text is complete. True if the rule 
+            is valid and complete. False otherwise.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isComplete:
+                    type: boolean
+                required:
+                  - isComplete
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /rules/functions/sankey:
+    post:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Returns list of nodes in the Sankey format.
+      requestBody:
+        description: The rule text to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SankeyRequest'
+      responses:
+        '200':
+          description: |
+            The list of nodes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SankeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule/functions/specific-tests:
+    get:
+      tags:
+        - RuleFunctions
+      security:
+        - BearerJWT: []
+      description: Get all test list. Use get_specific_tests parser method.
+      parameters:
+        - name: category
+          in: query
+          description: The test category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The test category list (if category is specified) or a dictionary containing all test_category names as keys with a set containing the specific tests for that test category as values.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        category_name:
+                          type: array
+                          items:
+                            type: string
+
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  # Node Function Endpoints
+  # (Note: GET requests cannot have body, so almost all below are POST)
+  # ============================================================
+  
+  /rules/node-functions/next-tokens:
+    post:
+      tags:
+        - NodeFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Returns a list containing the next set of allowed tokens 
+        after the last token in the provided node text. The text 
+        must conform to the rules and grammar required. Use get_next_tokens parser method.
+      requestBody:
+        description: The provided completed or semi-completed node text
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeText:
+                  type: string
+              required:
+                - nodeText
+      responses:
+        '200':
+          description: |
+            A list containing the list of the next allowed tokens 
+            after the last word in the node text. If the node text 
+            is complete, returns an empty list. 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nextTokens:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - nextTokens
+        '400':
+          description: |
+            Missing or malformed request body, 
+            or the node text passed in has incorrect grammar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/node-functions/translation:
+    post:
+      tags:
+        - NodeFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Translates the provided node text (plain English) 
+        to the desired script language (technical text). Use get_translation node parser method.
+      requestBody:
+        description: The node text to be translated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeText:
+                  type: string
+                ruleTests:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+                      testCategoryName:
+                        type: string
+                      testGroupName:
+                        type: string
+                    required:
+                      - testName
+                      - testType
+                      - testCategoryName
+              required:
+                - nodeText
+      responses:
+        '200':
+          description: The translated node text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translation:
+                    type: string
+                required:
+                  - translation
+        '400':
+          description: |
+            Missing or malformed request body, 
+            or the grammar is incorrect, 
+            or the node text parses but is not complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/node-functions/parses:
+    post:
+      tags:
+        - NodeFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Parses the passed in node text and returns whether or not 
+        it parses. The node text may or may not be complete. Use parses parser method.
+      requestBody:
+        description: The node text to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeText:
+                  type: string
+              required:
+                - nodeText
+      responses:
+        '200':
+          description: |
+            Whether or not the node text parses. True if the node parses 
+            correctly (even if incomplete). False otherwise.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parses:
+                    type: boolean
+                required:
+                  - parses
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /rules/node-functions/is-complete:
+    post:
+      tags:
+        - NodeFunctions
+      security:
+        - BearerJWT: []
+      description: |
+        Returns whether or not the passed in node text is complete. Use is_complete parser method.
+      requestBody:
+        description: The node text to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeText:
+                  type: string
+              required:
+                - nodeText
+      responses:
+        '200':
+          description: |
+            Whether or not the node text is complete. True if the node 
+            is valid and complete. False otherwise.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isComplete:
+                    type: boolean
+                required:
+                  - isComplete
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rule/node-functions/specific-tests:
+    get:
+      tags:
+        - NodeFunctions
+      security:
+        - BearerJWT: []
+      description: Get all test list. Use get_specific_tests node parser method.
+      parameters:
+        - name: category
+          in: query
+          description: The test category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The test category list (if category is specified) or a dictionary containing all test_category names as keys with a set containing the specific tests for that test category as values.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        category_name:
+                          type: array
+                          items:
+                            type: string
+
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  # Project Endpoints
+  # ============================================================
+  
+  /projects:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerJWT: []
+      description: Get all projects (sorted in alphabetical order by name)
+      parameters:
+        - $ref: '#/components/parameters/nameFilter'
+        - $ref: '#/components/parameters/typeFilter'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Project results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/Project'
+                        - $ref: '#/components/schemas/ProjectSummary'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{projectId}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerJWT: []
+      description: Get a project by ID
+      parameters:
+        - name: projectId
+          in: path
+          description: ID of project to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Mappings Endpoints
+  # ============================================================
+  /mapppings:
+    get:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Get test categories with tests, filtered by test or test category name, sorted in alphabetical order by name
+      parameters:
+        - $ref: '#/components/parameters/nameFilter'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Test categories results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TestCategoryWithTests'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /mappings/test-categories:
+    get:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Get all test categories (sorted in alphabetical order by name)
+      parameters:
+        - $ref: '#/components/parameters/nameFilter'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Test categories results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TestCategory'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Create new test category
+      requestBody:
+        description: New test category  info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: |
+            The  test category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestCategory'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: |
+            A test category already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Delete a test category by name
+      parameters:
+        - name: name
+          in: query
+          description: name of test category
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Test category was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '404':
+          description: Test category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /mappings/test-categories/{testCategoryId}:
+    get:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Get a rule by ID
+      parameters:
+        - name: testCategoryId
+          in: path
+          description: ID of test category to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested test category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestCategory'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Test category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /mappings/tests:
+    get:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Get all tests (sorted in alphabetical order by name)
+      parameters:
+        - $ref: '#/components/parameters/nameFilter'
+        - name: category
+          in: query
+          description: |
+            Filter the results by category name. Keep the results
+            that contain the specified string in its name.
+          required: False
+          schema:
+            type: string
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: Tests results matching the parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginationInfo:
+                    $ref: '#/components/schemas/PaginationInfo'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Test'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Create new test
+      requestBody:
+        description: New test info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                testCategoryId:
+                  type: integer
+      responses:
+        '201':
+          description: |
+            The  test created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Test'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: |
+            A test already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Delete a test  by name
+      parameters:
+        - name: name
+          in: query
+          description: name of test
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Test was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/SuperUsersOnlyError'
+        '404':
+          description: Test not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /mappings/tests/{testId}:
+    get:
+      tags:
+        - Mappings
+      security:
+        - BearerJWT: []
+      description: Get a test by ID
+      parameters:
+        - name: testId
+          in: path
+          description: ID of test to get
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The requested test
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Test'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Test category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /import/rule:
+    post:
+      tags:
+        - Import
+      security:
+        - BearerJWT: []
+      description: Import a Rule from a file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: .xls or .xlsx file with "Mappings" and "Text" sheets
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: |
+            The rule created from the uploaded file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: 'Rule with that name already exists'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /import/project:
+    post:
+      tags:
+        - Import
+      security:
+        - BearerJWT: []
+      description: Import a Project with vins and test from a file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: .xls or .xlsx file with "Projects" sheet
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: |
+            The project created from the uploaded file
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: 'Rule with that name already exists'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /import/mappings:
+    post:
+      tags:
+        - Import
+      security:
+        - BearerJWT: []
+      description: Import Mappings (Test categories and tests) with vins and test from a file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: .xls or .xlsx file with "Mapping" sheet
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: |
+            The Mappings (Test categories and tests) created from the uploaded file
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestCategory'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: 'Rule with that name already exists'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  # Misc Endpoints
+  # ============================================================
+  
+  /invitations:
+    put:
+      tags:
+        - Misc
+      security:
+        - BearerJWT: []
+      description: Accepts invitation for workspace
+      requestBody:
+        description: Token
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+                - token
+      responses:
+        '200':
+          description: The requested project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Invalid user. User can only accept it's own invitations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Misc
+      security:
+        - BearerJWT: []
+      description: Invite a collaborator via email to the workspace
+      requestBody:
+        description: Invitation info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                workspaceId:
+                  type: integer
+                  format: int32
+              required:
+                - email
+      responses:
+        '204':
+          description: Invitation sent successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+  /feedback:
+    post:
+      tags:
+        - Feedback
+      security:
+        - BearerJWT: []
+      description: Send feedback or feature requests
+      requestBody:
+        description: Feedback info
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  type: string
+              required:
+                - feedback
+      responses:
+        '204':
+          description: Feedback sent successfully
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
+# Define the reusable objects
+components:
+  
+  # Use JSON Web Token in header for authentication
+  securitySchemes:
+    BearerJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  # Define commonly-used request parameters
+  parameters:
+    limit:
+      name: limit
+      in: query
+      description: Maximum number of results to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 1E10
+    offset:
+      name: offset
+      in: query
+      description: Start index of results to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    userSortBy:
+      name: sortBy
+      in: query
+      description: Property by which to sort the user results
+      required: false
+      schema:
+        type: string
+        default: name
+        enum:
+          - name
+          - email
+          - role
+    sortOrder:
+      name: sortOrder
+      in: query
+      description: Order to sort the results (ascending/descending)
+      required: false
+      schema:
+        type: string
+        default: asc
+        enum:
+          - asc
+          - desc
+    nameFilter:
+      name: name
+      in: query
+      description: |
+        Filter the results by name. Keep the results 
+        that contain the specified string in its name.
+      required: false
+      schema:
+        type: string
+    typeFilter:
+      name: type
+      in: query
+      description: |
+        Type of the results. All or summary only.
+      required: false
+      schema:
+        type: string
+    ruleVersionIdParameter:
+      name: ruleVersionId
+      in: path
+      description: ID of a rule version
+      required: true
+      schema:
+        type: integer
+        format: int32
+  
+  # Define commonly-used error responses
+  responses:
+    BadRequestError:
+      description: Missing or malformed parameters/body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorModel'
+    UnauthorizedError:
+      description: Missing or invalid JSON Web Token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorModel'
+    SuperUsersOnlyError:
+      description: |
+        Missing or invalid JSON Web Token. 
+        Access restricted to Super Users only.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorModel'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorModel'
+  
+  # Define the data models
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          default: 'Standard User'
+          enum:
+            - 'Standard User'
+            - 'Super User'
+        thumbnailUrl:
+          type: string
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        ownerUserId:
+          type: integer
+          format: int32
+        memberUserIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        ruleIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        projectIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    Rule:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        ruleVersions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleVersion'
+    RuleVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        parentRuleId:
+          type: integer
+          format: int32
+        versionNumber:
+          type: string
+          format: 'x.y'
+        authorUserId:
+          type: integer
+          format: int32
+        authorUserName:
+          type: string
+        ruleTree:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleNode'
+        enabledVins:
+          type: array
+          items:
+            $ref: '#/components/schemas/VinWithTests'
+        dateCreated:
+          type: string
+          format: date
+        dateModified:
+          type: string
+          format: date
+        state:
+          type: string
+          default: 'Draft'
+          enum:
+            - 'Draft'
+            - 'In Review'
+            - 'Published'
+        text:
+          type: string
+        specificTest:
+          type: string
+        testCategory:
+          type: string
+        testType:
+          type: string
+        notes:
+          type: array
+          items:
+            type: object
+            properties:
+              authorUserId:
+                type: integer
+                format: int32
+              authorUserName:
+                type: string
+              dateCreated:
+                type: string
+                format: date
+              notes:
+                type: string
+        lock:
+          type: object
+          properties:
+            isLocked:
+              type: boolean
+              default: false
+            lockedByUserId:
+              type: integer
+              format: int32
+              default: -1
+              description: |
+                ID of user that last locked this rule version. 
+                Needed because a Standard User can only unlock 
+                a version that he/she previously locked.
+    RuleNode:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        parentId:
+          type: integer
+          format: int32
+        text:
+          type: string
+    ProjectSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        totalVins:
+          type: integer
+          format: int32
+        matchVins:
+          type: integer
+          format: int32
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        # can we remove this?
+        vins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vin'
+    Test:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        testCategoryId:
+          type: integer
+          format: int32
+        testCategoryName:
+          type: string
+    TestCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    TestCategoryWithTests:
+      allOf:
+        - $ref: '#/components/schemas/TestCategory'
+        - type: object
+          properties:
+            tests:
+              type: array
+              items:
+                $ref: '#/components/schemas/Test'
+    Vin:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        vin:
+          type: string
+    VinWithTests:
+      allOf:
+        - $ref: '#/components/schemas/Vin'
+        - type: object
+          properties:
+            testResults:
+              type: object
+              additionalProperties:
+                type: number
+                format: float
+              example:
+                pFIFTY_PERCENT_POINT fatigue test: 5.1
+                pFIFTY_PERCENT_POINT binding test: 2
+            qualifier:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                -blah*I.sca.aaa.blah.AAA-50*qualifier: "="
+
+    # Requests
+    SankeyRequest:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              node:
+                type: string
+              text:
+                type: string
+            required:
+              - node
+              - text
+        ruleText:
+          type: string
+        agms:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            group1: [category1, category2] 
+        ats:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            category1: [FIFTY_PER_CENT, FIFTY_PER_CENT]
+            category2: [FIFTY_PER_CENT, FIFTY_PER_CENT]
+        ams:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            category1: [speed, blah]
+            category2: [name1, name2]
+        vins:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: VIN001
+              testResults:
+                type: object
+                additionalProperties:
+                  type: integer
+                example:
+                  speed: 5
+                  blah: 10
+              qualifier:
+                type: object
+                additionalProperties:
+                  type: string
+                example:
+                  speed: ","
+                  blah: "=,A"
+            required:
+              - name
+              - testResults
+      required:
+      - nodes
+      - ruleText
+      - agms
+      - ats
+      - ams
+      - vins
+                  
+    # Responses
+    SankeyResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              node:
+                type: string
+                example: '1.1'
+              text:
+                type: string
+              vin_or_subvin_list:
+                type: array
+                items:
+                  type: string
+                example: [VIN001, VIN002, VIN003]
+
+    # JWT and user info returned upon successful login/registration
+    LoginResponseBody:
+      type: object
+      properties:
+        jwt:
+          type: string
+          description: JSON Web Token
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - jwt
+        - user
+    
+    # Pagination info returned by some endpoints with paged list results 
+    PaginationInfo:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Maximum number of results per page
+          format: int32
+        offset:
+          type: integer
+          description: Start index of results in the current page
+          format: int32
+        totalCount:
+          type: integer
+          description: Total number of results available
+          format: int32
+      required:
+        - limit
+        - offset
+        - totalCount
+    
+    # Message returned by endpoints on error conditions
+    ErrorModel:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      required:
+        - code
+        - message

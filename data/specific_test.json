@@ -1,0 +1,254 @@
+[
+    {
+        "model": "app.rule",
+        "pk": 1,
+        "fields": {
+            "name": "New Rule"
+        }
+    },
+    {
+        "model": "app.user",
+        "pk": 1,
+        "fields": {
+            "name": "John Doe",
+            "email": "jdoe@example.com",
+            "password": "",
+            "thumbnail_url": null,
+            "role": "admin"
+        }
+    },
+    {
+        "model": "app.workspace",
+        "pk": 1,
+        "fields": {
+            "name": "Workspace",
+            "user": 1
+        }
+    },
+    {
+      "model": "app.project",
+      "pk": 1,
+      "fields": {
+        "name": "project1"
+      }
+    },
+    {
+      "model": "app.vin",
+      "pk": 1,
+      "fields": {
+        "name": "vin 1"
+      }
+    },
+    {
+      "model": "app.workspacesproject",
+      "pk": 1,
+      "fields": {
+        "workspace": 1,
+        "project": 1
+      }
+    },
+    {
+        "model": "app.ruleversion",
+        "pk": 1,
+        "fields": {
+            "rule": 1,
+            "version_number": "1.0",
+            "user": 1,
+            "date_created": "2021-12-06",
+            "date_modified": "2021-12-06",
+            "state": "Draft",
+            "text": "",
+            "specific_test": "",
+            "test_category": "",
+            "test_type": "",
+            "is_locked": false,
+            "locked_by_user_id": 0
+        }
+    },
+    {
+        "model": "app.ruleversion",
+        "pk": 2,
+        "fields": {
+            "rule": 1,
+            "version_number": "1.1",
+            "user": 1,
+            "date_created": "2021-12-06",
+            "date_modified": "2021-12-06",
+            "state": "Draft",
+            "text": "",
+            "specific_test": "",
+            "test_category": "",
+            "test_type": "",
+            "is_locked": true,
+            "locked_by_user_id": 1
+        }
+    },
+    {
+        "model": "app.ruleversionnode",
+        "pk": 1,
+        "fields": {
+          "node_id": 1,
+          "rule_text": "root",
+          "rule_version": 1,
+          "parent_id": null
+        }
+    },
+    {
+        "model": "app.ruleversionnode",
+        "pk": 2,
+        "fields": {
+            "node_id": 2,
+            "rule_text": "child-1",
+            "rule_version": 1,
+            "parent_id": 1
+        }
+    },
+    {
+        "model": "app.ruleversionnode",
+        "pk": 3,
+        "fields": {
+            "node_id": 3,
+            "rule_text": "child-2",
+            "rule_version": 1,
+            "parent_id": 2
+        }
+    },
+    {
+        "model": "app.ruleversionnote",
+        "pk": 1,
+        "fields": {
+            "user": 1,
+            "date_created": "2021-12-06",
+            "rule_version": 1,
+            "notes": "version"
+        }
+    },
+    {
+        "model": "app.ruleversionnote",
+        "pk": 2,
+        "fields": {
+            "user": 1,
+            "date_created": "2021-12-06",
+            "rule_version": 2,
+            "notes": "version2"
+        }
+    },
+    {
+        "model": "app.workspacesmember",
+        "pk": 1,
+        "fields": {
+            "workspace": 1,
+            "user": 1
+        }
+    },
+    {
+        "model": "app.workspacesrule",
+        "pk": 1,
+        "fields": {
+            "workspace": 1,
+            "rule": 1
+        }
+    },
+    {
+        "model": "app.testcategories",
+        "pk": 1,
+        "fields": {
+            "name": "category 1"
+        }
+    },
+    {
+        "model": "app.testcategories",
+        "pk": 2,
+        "fields": {
+            "name": "category 2"
+        }
+    },
+    {
+        "model": "app.testcategories",
+        "pk": 3,
+        "fields": {
+            "name": "category 3"
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 1,
+        "fields": {
+            "name": "test 1",
+            "type": "type 1",
+            "test_categories": 1
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 2,
+        "fields": {
+            "name": "test 2",
+            "type": "type 1",
+            "test_categories": 1
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 3,
+        "fields": {
+            "name": "test 3",
+            "type": "type 1",
+            "test_categories": 1
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 4,
+        "fields": {
+            "name": "test 4",
+            "type": "type 1",
+            "test_categories": 2
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 5,
+        "fields": {
+            "name": "test 5",
+            "type": "type 1",
+            "test_categories": 2
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 6,
+        "fields": {
+            "name": "test 6",
+            "type": "type 1",
+            "test_categories": 2
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 7,
+        "fields": {
+            "name": "test 7",
+            "type": "type 1",
+            "test_categories": 3
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 8,
+        "fields": {
+            "name": "test 8",
+            "type": "type 1",
+            "test_categories": 3
+        }
+    },
+    {
+        "model": "app.tests",
+        "pk": 9,
+        "fields": {
+            "name": "test 9",
+            "type": "type 1",
+            "test_categories": 3
+        }
+    }
+]

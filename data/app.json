@@ -1,0 +1,483 @@
+[
+{
+  "model": "app.rule",
+  "pk": 1,
+  "fields": {
+    "name": "rule"
+  }
+},
+{
+  "model": "app.rule",
+  "pk": 2,
+  "fields": {
+    "name": "editable-rule"
+  }
+},
+{
+  "model": "app.rule",
+  "pk": 3,
+  "fields": {
+    "name": "deletable-rule"
+  }
+},
+{
+  "model": "app.user",
+  "pk": 1,
+  "fields": {
+    "name": "admin",
+    "email": "admin@example.com",
+    "password": "admin",
+    "thumbnail_url": null,
+    "role": "admin"
+  }
+},
+{
+  "model": "app.user",
+  "pk": 2,
+  "fields": {
+    "name": "standard",
+    "email": "standard@example.com",
+    "password": "standard",
+    "thumbnail_url": null,
+    "role": "standard"
+  }
+},
+{
+  "model": "app.user",
+  "pk": 3,
+  "fields": {
+    "name": "role-editable",
+    "email": "editable@example.com",
+    "password": "role-editable",
+    "thumbnail_url": null,
+    "role": "standard"
+  }
+},
+{
+  "model": "app.user",
+  "pk": 4,
+  "fields": {
+    "name": "deletable",
+    "email": "deletable@example.com",
+    "password": "deletable",
+    "thumbnail_url": null,
+    "role": "standard"
+  }
+},
+{
+  "model": "app.workspace",
+  "pk": 1,
+  "fields": {
+    "name": "workspace1",
+    "user": 1
+  }
+},
+{
+  "model": "app.workspace",
+  "pk": 2,
+  "fields": {
+    "name": "workspace-editable",
+    "user": 1
+  }
+},
+{
+  "model": "app.workspace",
+  "pk": 3,
+  "fields": {
+    "name": "workspace-deletable",
+    "user": 1
+  }
+},
+{
+  "model": "app.project",
+  "pk": 1,
+  "fields": {
+    "name": "project1"
+  }
+},
+{
+  "model": "app.project",
+  "pk": 2,
+  "fields": {
+    "name": "project2"
+  }
+},
+{
+  "model": "app.project",
+  "pk": 3,
+  "fields": {
+    "name": "project3"
+  }
+},
+{
+  "model": "app.vin",
+  "pk": 1,
+  "fields": {
+    "name": "vin 1"
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 1,
+  "fields": {
+    "rule": 1,
+    "version_number": "1.0",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 2,
+  "fields": {
+    "rule": 2,
+    "version_number": "1.0",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 3,
+  "fields": {
+    "rule": 3,
+    "version_number": "1.0",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 4,
+  "fields": {
+    "rule": 2,
+    "version_number": "state Draft - In Review",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 5,
+  "fields": {
+    "rule": 2,
+    "version_number": "state In Review - Published",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "In Review",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 6,
+  "fields": {
+    "rule": 2,
+    "version_number": "state In Review - Draft",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "In Review",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 7,
+  "fields": {
+    "rule": 2,
+    "version_number": "state Draft",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 8,
+  "fields": {
+    "rule": 2,
+    "version_number": "state Published",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Published",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 9,
+  "fields": {
+    "rule": 1,
+    "version_number": "state locked",
+    "user": 2,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": true,
+    "locked_by_user_id": 2
+  }
+},
+{
+  "model": "app.ruleversion",
+  "pk": 10,
+  "fields": {
+    "rule": 1,
+    "version_number": "deletable",
+    "user": 1,
+    "date_created": "2021-10-08",
+    "date_modified": "2021-10-08",
+    "state": "Draft",
+    "text": "",
+    "specific_test": "",
+    "test_category": "",
+    "test_type": "",
+    "is_locked": false,
+    "locked_by_user_id": 0
+  }
+},
+{
+  "model": "app.ruleversionhasvin",
+  "pk": 1,
+  "fields": {
+    "rule_version": 2,
+    "vins": 1
+  }
+},
+{
+  "model": "app.ruleversionnode",
+  "pk": 1,
+  "fields": {
+    "node_id": 1,
+    "rule_text": "root",
+    "rule_version": 1,
+    "parent_id": null
+  }
+},
+{
+  "model": "app.ruleversionnode",
+  "pk": 2,
+  "fields": {
+    "node_id": 2,
+    "rule_text": "child-1",
+    "rule_version": 1,
+    "parent_id": 1
+  }
+},
+{
+  "model": "app.ruleversionnode",
+  "pk": 3,
+  "fields": {
+    "node_id": 3,
+    "rule_text": "child-2",
+    "rule_version": 1,
+    "parent_id": 2
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 1,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 2,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 2,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 4,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 4,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 5,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 5,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 6,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 6,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 7,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 7,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 8,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 8,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 9,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 9,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.ruleversionnote",
+  "pk": 10,
+  "fields": {
+    "user": 1,
+    "date_created": "2021-10-08",
+    "rule_version": 10,
+    "notes": "note"
+  }
+},
+{
+  "model": "app.workspacesproject",
+  "pk": 1,
+  "fields": {
+    "workspace": 1,
+    "project": 1
+  }
+},
+{
+  "model": "app.workspacesproject",
+  "pk": 2,
+  "fields": {
+    "workspace": 2,
+    "project": 1
+  }
+},
+{
+  "model": "app.workspacesmember",
+  "pk": 1,
+  "fields": {
+    "workspace": 1,
+    "user": 1
+  }
+},
+{
+  "model": "app.workspacesmember",
+  "pk": 2,
+  "fields": {
+    "workspace": 2,
+    "user": 1
+  }
+},
+{
+  "model": "app.workspacesmember",
+  "pk": 3,
+  "fields": {
+    "workspace": 3,
+    "user": 1
+  }
+},
+{
+  "model": "app.workspacesrule",
+  "pk": 1,
+  "fields": {
+    "workspace": 1,
+    "rule": 1
+  }
+},
+{
+  "model": "app.workspacesrule",
+  "pk": 2,
+  "fields": {
+    "workspace": 2,
+    "rule": 1
+  }
+}
+]
